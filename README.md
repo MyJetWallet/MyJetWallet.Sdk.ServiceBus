@@ -57,3 +57,17 @@ public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
     }
 }
 ```
+
+**Model:**
+
+```
+[DataContract]
+public class PortfolioTrade
+{
+    public const string TopicName = "spot-liquidity-engine-trade";
+
+    [DataMember(Order = 1)] public string TradeId { get; set; }
+    [DataMember(Order = 2)] public string Source { get; set; }
+    [DataMember(Order = 3)] public bool IsInternal { get; set; }
+}
+```
