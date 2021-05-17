@@ -2,7 +2,7 @@
 
 **Module:**
 
-```
+```csharp
 public class ServiceBusModule : Module
 {
     protected override void Load(ContainerBuilder builder)
@@ -35,7 +35,7 @@ public class ServiceBusModule : Module
 
 **LifeTime:**
 
-```
+```csharp
 public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
 {
     private readonly MyServiceBusTcpClient _myServiceBusTcpClient;
@@ -60,7 +60,7 @@ public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
 
 **Model:**
 
-```
+```csharp
 [DataContract]
 public class PortfolioTrade
 {
