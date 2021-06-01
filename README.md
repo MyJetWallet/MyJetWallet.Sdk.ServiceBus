@@ -11,24 +11,17 @@ public class ServiceBusModule : Module
 
         var queryName = "Liquidity-Reports";
 
-        // publisher
-        builder
-            .RegisterInstance(new MyServiceBusPublisher<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, true))
-            .As<IPublisher<PortfolioTrade>>()
-            .SingleInstance();
+
+        // publisher (IPublisher<PortfolioTrade>)
+        builder.RegisterMyServiceBusPublisher<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, false);
 
 
-        // batch subscriber
-        builder
-            .RegisterInstance(new MyServiceBusSubscriber<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, queryName, TopicQueueType.Permanent, true))
-            .As<ISubscriber<IReadOnlyList<PortfolioTrade>>>()
-            .SingleInstance();
+        // batch subscriber (ISubscriber<IReadOnlyList<PortfolioTrade>>)
+        builder.RegisterMyServiceBusSubscriberBatch<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, queryName, TopicQueueType.Permanent);
 
-        // single subscriber
-        builder
-            .RegisterInstance(new MyServiceBusSubscriber<PortfolioPosition>(serviceBusClient, PortfolioPosition.TopicName, queryName, TopicQueueType.Permanent, false))
-            .As<ISubscriber<PortfolioTrade>>()
-            .SingleInstance();
+
+        // single subscriber (ISubscriber<PortfolioTrade>)
+        builder.RegisterMyServiceBusSubscriberSingle<PortfolioTrade>(serviceBusClient, PortfolioPosition.TopicName, queryName, TopicQueueType.Permanent);
     }
 }
 ```

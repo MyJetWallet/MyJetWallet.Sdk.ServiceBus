@@ -1,6 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using Autofac;
+using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
+using MyServiceBus.Abstractions;
 using MyServiceBus.TcpClient;
 using SimpleTrading.ServiceBus.CommonUtils;
 using SimpleTrading.ServiceBus.CommonUtils.Serializers;
@@ -40,6 +43,39 @@ namespace MyJetWallet.Sdk.ServiceBus
         }
 
         public static MyServiceBusTcpClient Client { get; private set; }
+
+        public static ContainerBuilder RegisterMyServiceBusPublisher<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
+        {
+            // publisher
+            builder
+                .RegisterInstance(new MyServiceBusPublisher<T>(client, topicName, immediatelyPersist))
+                .As<IPublisher<T>>()
+                .SingleInstance();
+
+            return builder;
+        }
+
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
+        {
+            // single subscriber
+            builder
+                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false))
+                .As<ISubscriber<T>>()
+                .SingleInstance();
+
+            return builder;
+        }
+
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
+        {
+            // batch subscriber
+            builder
+                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true))
+                .As<ISubscriber<IReadOnlyList<T>>>()
+                .SingleInstance();
+
+            return builder;
+        }
 
     }
 }
