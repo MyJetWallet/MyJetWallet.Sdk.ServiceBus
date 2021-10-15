@@ -10,24 +10,23 @@ namespace MyJetWallet.Sdk.ServiceBus
         {
             try
             {
-                if (src == null)
-                    throw new ArgumentException("Packet cannot be null", nameof(src));
-                
-                MemoryStream memoryStream = new MemoryStream();
-                memoryStream.WriteByte((byte) 0);
-                Serializer.Serialize<object>((Stream) memoryStream, src);
-                byte[] array = memoryStream.ToArray();
-            
+                var stream = new MemoryStream();
+
+                stream.WriteByte(0); // First byte is a version contract;
+
+                ProtoBuf.Serializer.Serialize(stream, src);
+
+                var result = stream.ToArray();
+
                 if (ServiceBusContracts.IsDebug)
-                    Console.WriteLine($"Serialize {(object) src.GetType()} MESSAGE LEN:" + array.Length);
-            
-                return array;
+                    Console.WriteLine($"Serialize {src.GetType()} MESSAGE LEN:" + result.Length);
+
+                return result;
             }
             catch (Exception ex)
             {
                 throw new Exception($"Cannot serialize {src.GetType().Name}: {ex.Message}", ex);
             }
-            
         }
     }
 }

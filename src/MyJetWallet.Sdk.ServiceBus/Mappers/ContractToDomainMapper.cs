@@ -10,26 +10,29 @@ namespace MyJetWallet.Sdk.ServiceBus
         {
             if (ServiceBusContracts.IsDebug)
                 Console.WriteLine($"GOT {typeof(T)} MESSAGE LEN:" + data.Length);
-            
-            if (data.Span[0] != (byte) 0)
-                throw new Exception("Not supported version of Contract");
 
-            try
-            {
-                ReadOnlySpan<byte> span = data.Slice(1, data.Length - 1).Span;
-                MemoryStream memoryStream = new MemoryStream(data.Length);
-                memoryStream.Write(span);
-                memoryStream.Position = 0L;
+            var span = data.Span;
 
-                return Serializer.Deserialize<T>((Stream) memoryStream);
-            }
-            catch (Exception ex)
+            if (span[0] == 0)
             {
-                var dataBase64 = Convert.ToBase64String(data.ToArray());
-                Console.WriteLine($"Cannot deserialize message {typeof(T).Name}. Data: '{dataBase64}'");
-                
-                throw new Exception($"Cannot deserialize message {typeof(T).Name}: {ex.Message}", ex);
+                try
+                {
+                    span = data.Slice(1, data.Length - 1).Span;
+                    var mem = new MemoryStream(data.Length);
+                    mem.Write(span);
+                    mem.Position = 0;
+                    return ProtoBuf.Serializer.Deserialize<T>(mem);
+                }
+                catch (Exception ex)
+                {
+                    var dataBase64 = Convert.ToBase64String(data.ToArray());
+                    Console.WriteLine($"Cannot deserialize message {typeof(T).Name}. Data: '{dataBase64}'");
+
+                    throw new Exception($"Cannot deserialize message {typeof(T).Name}: {ex.Message}", ex);
+                }
             }
+
+            throw new Exception("Not supported version of Contract");
         }
     }
 }
