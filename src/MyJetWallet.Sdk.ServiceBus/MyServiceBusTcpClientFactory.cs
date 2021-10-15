@@ -12,10 +12,6 @@ namespace MyJetWallet.Sdk.ServiceBus
 {
     public static class MyServiceBusTcpClientFactory
     {
-        public static ILogger Logger { get; set; }
-        
-        public static string AppName { get; set; }
-
         public static MyServiceBusTcpClient Create(Func<string> getHostPort, ILogger logger)
         {
             var name = ApplicationEnvironment.HostName ??
@@ -32,8 +28,8 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static MyServiceBusTcpClient RegisterMyServiceBusTcpClient(this ContainerBuilder builder, Func<string> getHostPort, ILoggerFactory loggerFactory)
         {
-            Logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
-            var client = Create(getHostPort, Logger);
+            var logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
+            var client = Create(getHostPort, logger);
 
             var manager = new ServiceBusManager(client);
             builder.RegisterInstance(manager).As<IServiceBusManager>().SingleInstance();
