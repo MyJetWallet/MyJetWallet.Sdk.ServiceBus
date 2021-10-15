@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Autofac;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
+using MyJetWallet.Sdk.Service;
 using MyServiceBus.Abstractions;
 using MyServiceBus.TcpClient;
 
@@ -12,9 +13,14 @@ namespace MyJetWallet.Sdk.ServiceBus
     public static class MyServiceBusTcpClientFactory
     {
         public static ILogger Logger { get; set; }
+        
+        public static string AppName { get; set; }
 
-        public static MyServiceBusTcpClient Create(Func<string> getHostPort, string name, ILogger logger)
+        public static MyServiceBusTcpClient Create(Func<string> getHostPort, ILogger logger)
         {
+            var name = ApplicationEnvironment.HostName ??
+                       $"{ApplicationEnvironment.AppName}:{ApplicationEnvironment.AppVersion}";
+            
             var serviceBusClient = new MyServiceBusTcpClient(getHostPort, name);
             serviceBusClient.Log.AddLogException(ex => logger.LogInformation(ex, "Exception in MyServiceBusTcpClient"));
             serviceBusClient.Log.AddLogInfo(info => logger.LogDebug($"MyServiceBusTcpClient[info]: {info}"));
@@ -24,10 +30,10 @@ namespace MyJetWallet.Sdk.ServiceBus
             return serviceBusClient;
         }
 
-        public static MyServiceBusTcpClient RegisterMyServiceBusTcpClient(this ContainerBuilder builder, Func<string> getHostPort, string name, ILoggerFactory loggerFactory)
+        public static MyServiceBusTcpClient RegisterMyServiceBusTcpClient(this ContainerBuilder builder, Func<string> getHostPort, ILoggerFactory loggerFactory)
         {
             Logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
-            var client = Create(getHostPort, name, Logger);
+            var client = Create(getHostPort, Logger);
 
             var manager = new ServiceBusManager(client);
             builder.RegisterInstance(manager).As<IServiceBusManager>().SingleInstance();
