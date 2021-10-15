@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using DotNetCoreDecorators;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using MyServiceBus.TcpClient;
-using SimpleTrading.ServiceBus.CommonUtils.Serializers;
 
 namespace MyJetWallet.Sdk.ServiceBus
 {
-    public class MyServiceBusPublisher<T> : IPublisher<T>
+    public class MyServiceBusPublisher<T> : IServiceBusPublisher<T>
     {
         private readonly MyServiceBusTcpClient _client;
         private readonly string _topicName;
@@ -19,9 +19,20 @@ namespace MyJetWallet.Sdk.ServiceBus
             this._client.CreateTopicIfNotExists(topicName);
         }
 
-        public async ValueTask PublishAsync(T valueToPublish)
+        public async ValueTask PublishAsync11(T valueToPublish)
         {
             await this._client.PublishAsync(_topicName, valueToPublish.ServiceBusContractToByteArray(), _immediatelyPersist);
+        }
+
+        public Task PublishAsync(T message)
+        {
+            return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(), _immediatelyPersist);
+        }
+
+        public Task PublishAsync(IEnumerable<T> messageList)
+        {
+            var batch = messageList.Select(e => e.ServiceBusContractToByteArray()).ToList();
+            return _client.PublishAsync(_topicName, batch, _immediatelyPersist);
         }
     }
 }

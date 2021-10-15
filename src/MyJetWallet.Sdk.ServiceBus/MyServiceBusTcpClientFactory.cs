@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Autofac;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyServiceBus.Abstractions;
 using MyServiceBus.TcpClient;
-using SimpleTrading.ServiceBus.CommonUtils;
-using SimpleTrading.ServiceBus.CommonUtils.Serializers;
 
 namespace MyJetWallet.Sdk.ServiceBus
 {
@@ -34,7 +33,7 @@ namespace MyJetWallet.Sdk.ServiceBus
             }
 
             Logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
-            var client = MyServiceBusTcpClientFactory.Create(getHostPort, name, Logger);
+            var client = Create(getHostPort, name, Logger);
             builder.RegisterInstance(client).AsSelf().AutoActivate().SingleInstance();
 
             Client = client;
@@ -46,10 +45,12 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static ContainerBuilder RegisterMyServiceBusPublisher<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
         {
+            client.CreateTopicIfNotExists(topicName);
+            
             // publisher
             builder
                 .RegisterInstance(new MyServiceBusPublisher<T>(client, topicName, immediatelyPersist))
-                .As<IPublisher<T>>()
+                .As<IServiceBusPublisher<T>>()
                 .SingleInstance();
 
             return builder;
@@ -57,6 +58,8 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
+            client.CreateTopicIfNotExists(topicName);
+            
             // single subscriber
             builder
                 .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false))
@@ -68,6 +71,8 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
+            client.CreateTopicIfNotExists(topicName);
+            
             // batch subscriber
             builder
                 .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true))

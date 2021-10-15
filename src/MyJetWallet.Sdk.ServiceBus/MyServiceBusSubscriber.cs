@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DotNetCoreDecorators;
 using MyServiceBus.Abstractions;
 using MyServiceBus.TcpClient;
-using SimpleTrading.ServiceBus.CommonUtils.Serializers;
 
 namespace MyJetWallet.Sdk.ServiceBus
 {
