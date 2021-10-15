@@ -21,27 +21,21 @@ namespace MyJetWallet.Sdk.ServiceBus
             serviceBusClient.SocketLogs.AddLogInfo((context, msg) => logger.LogInformation($"MyServiceBusTcpClient[Socket {context?.Id}|{context?.ContextName}|{context?.Inited}][Info] {msg}"));
             serviceBusClient.SocketLogs.AddLogException((context, exception) => logger.LogInformation(exception, $"MyServiceBusTcpClient[Socket {context?.Id}|{context?.ContextName}|{context?.Inited}][Exception] {exception.Message}"));
 
-
             return serviceBusClient;
         }
 
         public static MyServiceBusTcpClient RegisterMyServiceBusTcpClient(this ContainerBuilder builder, Func<string> getHostPort, string name, ILoggerFactory loggerFactory)
         {
-            if (Client != null)
-            {
-                throw new Exception("Client already created");
-            }
-
             Logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
             var client = Create(getHostPort, name, Logger);
-            builder.RegisterInstance(client).AsSelf().AutoActivate().SingleInstance();
 
-            Client = client;
+            var manager = new ServiceBusManager(client);
+            builder.RegisterInstance(manager).As<IServiceBusManager>().SingleInstance();
+
+            builder.RegisterType<ServiceBusLifeTime>().AsSelf().SingleInstance().AutoActivate();
 
             return client;
         }
-
-        public static MyServiceBusTcpClient Client { get; private set; }
 
         public static ContainerBuilder RegisterMyServiceBusPublisher<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
         {
