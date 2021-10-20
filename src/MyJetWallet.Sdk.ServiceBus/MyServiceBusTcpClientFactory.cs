@@ -54,8 +54,6 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
-            client.CreateTopicIfNotExists(topicName);
-            
             // single subscriber
             builder
                 .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false))
@@ -67,11 +65,20 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
-            client.CreateTopicIfNotExists(topicName);
-            
             // batch subscriber
             builder
                 .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true))
+                .As<ISubscriber<IReadOnlyList<T>>>()
+                .SingleInstance();
+
+            return builder;
+        }
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, int chunkSize)
+        {
+            // batch subscriber
+            builder
+                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, chunkSize))
                 .As<ISubscriber<IReadOnlyList<T>>>()
                 .SingleInstance();
 
