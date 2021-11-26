@@ -8,14 +8,21 @@ namespace MyJetWallet.Sdk.ServiceBus
         void Stop();
         
         bool IsStarted { get; }
+        
+        bool IsConnected { get; }
+        
+        string HostPort { get; }
     }
 
     public class ServiceBusManager : IServiceBusManager
     {
+        public string HostPort { get; }
+        
         private readonly MyServiceBusTcpClient _client;
 
-        public ServiceBusManager(MyServiceBusTcpClient client)
+        public ServiceBusManager(MyServiceBusTcpClient client, string hostPort)
         {
+            HostPort = hostPort;
             _client = client;
         }
 
@@ -31,5 +38,7 @@ namespace MyJetWallet.Sdk.ServiceBus
         }
 
         public bool IsStarted { get; set; }
+
+        public bool IsConnected => _client?.Connected ?? false;
     }
 }

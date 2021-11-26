@@ -5,6 +5,7 @@ using Autofac;
 using DotNetCoreDecorators;
 using Microsoft.Extensions.Logging;
 using MyJetWallet.Sdk.Service;
+using MyJetWallet.Sdk.Service.LivnesProbs;
 using MyServiceBus.Abstractions;
 using MyServiceBus.TcpClient;
 
@@ -31,10 +32,10 @@ namespace MyJetWallet.Sdk.ServiceBus
             var logger = loggerFactory.CreateLogger<MyServiceBusTcpClient>();
             var client = Create(getHostPort, logger);
 
-            var manager = new ServiceBusManager(client);
+            var manager = new ServiceBusManager(client, getHostPort?.Invoke());
             builder.RegisterInstance(manager).As<IServiceBusManager>().SingleInstance();
 
-            builder.RegisterType<ServiceBusLifeTime>().AsSelf().SingleInstance().AutoActivate();
+            builder.RegisterType<ServiceBusLifeTime>().AsSelf().As<ILivenessReporter>().SingleInstance().AutoActivate();
 
             return client;
         }
