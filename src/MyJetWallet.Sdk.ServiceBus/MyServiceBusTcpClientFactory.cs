@@ -63,6 +63,17 @@ namespace MyJetWallet.Sdk.ServiceBus
 
             return builder;
         }
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, IDeduplicator<T> _deduplicator)
+        {
+            // single subscriber
+            builder
+                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, _deduplicator))
+                .As<ISubscriber<T>>()
+                .SingleInstance();
+
+            return builder;
+        }
 
         public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
@@ -86,5 +97,19 @@ namespace MyJetWallet.Sdk.ServiceBus
             return builder;
         }
 
+        public static MyServiceBusDeduplicator<T> RegisterMyServiceBusDeduplicator<T>(this ContainerBuilder builder, Func<T, string> tToStrFunc, Func<string> noSqlWriterUrl, string tableName, string topicName, TimeSpan expirationTime, ILoggerFactory loggerFactory)
+        {
+            var logger = loggerFactory.CreateLogger<MyServiceBusDeduplicator<T>>();
+
+            var deduplicator = new MyServiceBusDeduplicator<T>(tToStrFunc, noSqlWriterUrl, tableName, topicName,
+                expirationTime, logger);
+            
+            builder
+                .RegisterInstance(deduplicator)
+                .As<IDeduplicator<T>>()
+                .SingleInstance();
+
+            return deduplicator;
+        }
     }
 }
