@@ -64,3 +64,30 @@ public class PortfolioTrade
     [DataMember(Order = 3)] public bool IsInternal { get; set; }
 }
 ```
+
+**Deduplication:**
+
+```csharp
+public class ServiceBusModule : Module
+{
+    protected override void Load(ContainerBuilder builder)
+    {
+        var serviceBusClient = builder.RegisterMyServiceBusTcpClient(Program.ReloadedSettings(e => e.SpotServiceBusHostPort), ApplicationEnvironment.HostName, Program.LogFactory);
+
+        var queryName = "Liquidity-Reports";
+
+        var deduplicator = builder.RegisterMyServiceBusDeduplicator<PortfolioTrade>(
+                    t => t.TraceId,                                             //Func to get unique id
+                    Program.ReloadedSettings(t=>t.MyNoSqlWriterUrl),            
+                    queryName,                                                  //NoSql table name
+                    PortfolioTrade.TopicName,                                   //NoSql partition key
+                    TimeSpan.FromHours(4),                                      //Expiration time
+                    Program.LogFactory);
+
+
+        // single subscriber (ISubscriber<PortfolioTrade>)
+        // dedupication only available for single subscriber
+        builder.RegisterMyServiceBusSubscriberSingle<PortfolioTrade>(serviceBusClient, PortfolioPosition.TopicName, queryName, TopicQueueType.Permanent, deduplicator);
+    }
+}
+```
