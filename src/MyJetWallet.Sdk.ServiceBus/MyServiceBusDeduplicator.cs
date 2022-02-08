@@ -52,7 +52,7 @@ public class MyServiceBusDeduplicator<T> : IDeduplicator<T>
         var entities = await _writer.GetAsync();
         foreach (var entity in entities.ToList())
         {
-            _registry.TryAdd(entity.PartitionKey, entity.Expires ?? DateTime.UtcNow);
+            _registry.TryAdd(entity.RowKey, entity.Expires ?? DateTime.UtcNow);
         }
     }
 
