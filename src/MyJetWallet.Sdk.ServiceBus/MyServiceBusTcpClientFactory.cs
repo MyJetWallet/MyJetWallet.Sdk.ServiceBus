@@ -191,5 +191,18 @@ namespace MyJetWallet.Sdk.ServiceBus
 
             return deduplicator;
         }
+
+
+        private static ILogger _deserializeExceptionHandlerLogger = null;
+        public static Action<Exception> GetDeserializeExceptionHandlerLogger(ILoggerFactory loggerFactory, string topicName)
+        {
+            if (_deserializeExceptionHandlerLogger == null)
+                _deserializeExceptionHandlerLogger = loggerFactory.CreateLogger("ServiceBusDeserializeLogger");
+
+            return ex =>
+            {
+                _deserializeExceptionHandlerLogger.LogError(ex, "Cannot Deserialize message from TOPIC {topicName}. Message was SKIPPED", topicName);
+            };
+        }
     }
 }
