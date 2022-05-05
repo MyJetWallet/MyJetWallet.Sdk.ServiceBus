@@ -53,18 +53,42 @@ namespace MyJetWallet.Sdk.ServiceBus
             return builder;
         }
 
-        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
         {
+            var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false, 100);
+
             // single subscriber
             builder
-                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false))
+                .RegisterInstance(subscriber)
                 .As<ISubscriber<T>>()
                 .SingleInstance();
 
             return builder;
         }
         
-        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, IDeduplicator<T> _deduplicator)
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
+            Action<Exception> deserializeExceptionHandler)
+        {
+            var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false, 100);
+            subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
+            
+            // single subscriber
+            builder
+                .RegisterInstance(subscriber)
+                .As<ISubscriber<T>>()
+                .SingleInstance();
+
+            return builder;
+        }
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, 
+            IDeduplicator<T> _deduplicator)
         {
             // single subscriber
             builder
@@ -74,23 +98,79 @@ namespace MyJetWallet.Sdk.ServiceBus
 
             return builder;
         }
-
-        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, 
+            IDeduplicator<T> _deduplicator,
+            Action<Exception> deserializeExceptionHandler)
         {
+            var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, _deduplicator);
+            subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
+            
+            // single subscriber
+            builder
+                .RegisterInstance(subscriber)
+                .As<ISubscriber<T>>()
+                .SingleInstance();
+
+            return builder;
+        }
+
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
+            Action<Exception> deserializeExceptionHandler)
+        {
+            var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, false);
+            subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
+            
             // batch subscriber
             builder
-                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true))
+                .RegisterInstance(subscriber)
                 .As<ISubscriber<IReadOnlyList<T>>>()
                 .SingleInstance();
 
             return builder;
         }
         
-        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(this ContainerBuilder builder, MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, int chunkSize)
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType)
+        {
+            // batch subscriber
+            builder
+                .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, false))
+                .As<ISubscriber<IReadOnlyList<T>>>()
+                .SingleInstance();
+
+            return builder;
+        }
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, int chunkSize)
         {
             // batch subscriber
             builder
                 .RegisterInstance(new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, chunkSize))
+                .As<ISubscriber<IReadOnlyList<T>>>()
+                .SingleInstance();
+
+            return builder;
+        }
+        
+        public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
+            this ContainerBuilder builder, 
+            MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, int chunkSize,
+            Action<Exception> deserializeExceptionHandler)
+        {
+            var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, chunkSize);
+            subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
+            
+            // batch subscriber
+            builder
+                .RegisterInstance(subscriber)
                 .As<ISubscriber<IReadOnlyList<T>>>()
                 .SingleInstance();
 
