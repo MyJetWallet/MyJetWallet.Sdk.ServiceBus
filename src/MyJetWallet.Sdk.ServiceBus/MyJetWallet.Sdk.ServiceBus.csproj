@@ -9,7 +9,7 @@
     <PackageReference Include="Autofac" Version="6.5.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.2.11" />
-    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.2.6" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.3.0" />
     <PackageReference Include="MyServiceBus.TcpClient" Version="2.4.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="protobuf-net" Version="3.2.8" />
