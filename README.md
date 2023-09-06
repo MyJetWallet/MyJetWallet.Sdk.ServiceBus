@@ -31,22 +31,22 @@ public class ServiceBusModule : Module
 ```csharp
 public class ApplicationLifetimeManager : ApplicationLifetimeManagerBase
 {
-    private readonly MyServiceBusTcpClient _myServiceBusTcpClient;
+    private readonly ServiceBusLifeTime _myServiceBusLifeTime;
 
-    public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, MyServiceBusTcpClient myServiceBusTcpClient)
+    public ApplicationLifetimeManager(IHostApplicationLifetime appLifetime, ServiceBusLifeTime myServiceBusLifeTime)
         : base(appLifetime)
     {
-        _myServiceBusTcpClient = myServiceBusTcpClient;
+        _myServiceBusLifeTime = myServiceBusLifeTime;
     }
 
     protected override void OnStarted()
     {
-        _myServiceBusTcpClient.Start();
+        _myServiceBusLifeTime.Start();
     }
 
     protected override void OnStopping()
     {
-        _myServiceBusTcpClient.Stop();
+        _myServiceBusLifeTime.Stop();
     }
 }
 ```
