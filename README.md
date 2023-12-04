@@ -17,11 +17,11 @@ public class ServiceBusModule : Module
 
 
         // batch subscriber (ISubscriber<IReadOnlyList<PortfolioTrade>>)
-        builder.RegisterMyServiceBusSubscriberBatch<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, queryName, TopicQueueType.Permanent);
+        builder.RegisterMyServiceBusSubscriberBatch<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, queryName, TopicQueueType.PermanentWithSingleConnection);
 
 
         // single subscriber (ISubscriber<PortfolioTrade>)
-        builder.RegisterMyServiceBusSubscriberSingle<PortfolioTrade>(serviceBusClient, PortfolioPosition.TopicName, queryName, TopicQueueType.Permanent);
+        builder.RegisterMyServiceBusSubscriberSingle<PortfolioTrade>(serviceBusClient, PortfolioPosition.TopicName, queryName, TopicQueueType.PermanentWithSingleConnection);
     }
 }
 ```
@@ -72,7 +72,7 @@ public class ServiceBusModule : Module
 {
     protected override void Load(ContainerBuilder builder)
     {
-        var serviceBusClient = builder.RegisterMyServiceBusTcpClient(Program.ReloadedSettings(e => e.SpotServiceBusHostPort), ApplicationEnvironment.HostName, Program.LogFactory);
+        var serviceBusClient = builder.RegisterMyServiceBusTcpClient(() => Program.Settings.SpotServiceBusHostPort, ApplicationEnvironment.HostName, Program.LogFactory);
 
         var queryName = "Liquidity-Reports";
 
