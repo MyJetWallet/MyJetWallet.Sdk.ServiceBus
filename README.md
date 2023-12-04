@@ -12,7 +12,7 @@ public class ServiceBusModule : Module
         var queryName = "Liquidity-Reports";
 
 
-        // publisher (IPublisher<PortfolioTrade>)
+        // publisher (IServiceBusPublisher<PortfolioTrade>)
         builder.RegisterMyServiceBusPublisher<PortfolioTrade>(serviceBusClient, PortfolioTrade.TopicName, false);
 
 
