@@ -65,6 +65,8 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         private async ValueTask HandlerSingle(IMyServiceBusMessage data)
         {
+            await Task.Yield();
+            
             T item = default(T);
             try
             {
@@ -86,6 +88,8 @@ namespace MyJetWallet.Sdk.ServiceBus
         
         private async ValueTask HandlerSingleWithDeduplication(IMyServiceBusMessage data)
         {
+            await Task.Yield();
+            
             T item = default(T);
             try
             {
@@ -115,6 +119,8 @@ namespace MyJetWallet.Sdk.ServiceBus
             if (!data.Any())
                 return;
             
+            await Task.Yield();
+            
             if (data.Count <= _chunkSize)
             {
                 await HandleBatchMessages(data);
@@ -122,7 +128,7 @@ namespace MyJetWallet.Sdk.ServiceBus
             else
             {
                 var index = 0;
-                var chunk = data.Skip(index).Take(_chunkSize).ToList();
+                var chunk = data.OrderBy(e => e.Id).Skip(index).Take(_chunkSize).ToList();
                 while (chunk.Any())
                 {
                     await HandleBatchMessages(chunk);
@@ -130,7 +136,7 @@ namespace MyJetWallet.Sdk.ServiceBus
                     ctx.ConfirmMessages(chunk.Select(e => e.Id));
 
                     index += _chunkSize;
-                    chunk = data.Skip(index).Take(_chunkSize).ToList();
+                    chunk = data.OrderBy(e => e.Id).Skip(index).Take(_chunkSize).ToList();
                 }
             }
         }
