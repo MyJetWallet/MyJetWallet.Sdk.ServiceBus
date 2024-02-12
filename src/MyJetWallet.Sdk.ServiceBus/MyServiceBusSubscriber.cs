@@ -24,16 +24,11 @@ namespace MyJetWallet.Sdk.ServiceBus
             bool withDeduplication)
         {
             _batchSubscribe = batchSubscribe;
+            _withDeduplication = withDeduplication;
+            
             if (!batchSubscribe)
             {
-                if (withDeduplication)
-                {
-                    client.Subscribe(topicName, queueName, queryType, HandlerSingleWithDeduplication);
-                }
-                else
-                {
-                    client.Subscribe(topicName, queueName, queryType, HandlerSingle);
-                }
+                client.Subscribe(topicName, queueName, queryType, HandlerBatchOneByOne);
             }
             else
             {
@@ -65,8 +60,6 @@ namespace MyJetWallet.Sdk.ServiceBus
 
         private async ValueTask HandlerSingle(IMyServiceBusMessage data)
         {
-            await Task.Yield();
-            
             T item = default(T);
             try
             {
@@ -88,8 +81,6 @@ namespace MyJetWallet.Sdk.ServiceBus
         
         private async ValueTask HandlerSingleWithDeduplication(IMyServiceBusMessage data)
         {
-            await Task.Yield();
-            
             T item = default(T);
             try
             {
@@ -112,6 +103,24 @@ namespace MyJetWallet.Sdk.ServiceBus
                 await subscribers(item);
 
             await _deduplicator.AddToRegistry(item);
+        }
+        
+        private async ValueTask HandlerBatchOneByOne(IConfirmationContext ctx, IReadOnlyList<IMyServiceBusMessage> data)
+        {
+            if (!data.Any())
+                return;
+            
+            await Task.Yield();
+
+            foreach (var message in data.OrderBy(e => e.Id))
+            {
+                if (_withDeduplication)
+                    await HandlerSingleWithDeduplication(message);
+                else
+                    await HandlerSingle(message);
+                
+                ctx.ConfirmMessages(new []{message.Id});
+            }
         }
 
         private async ValueTask HandlerBatch(IConfirmationContext ctx, IReadOnlyList<IMyServiceBusMessage> data)
