@@ -21,6 +21,7 @@ namespace MyJetWallet.Sdk.ServiceBus
             _clients = clients;
             _logger = logger;
             _timer = MyTaskTimer.Create<ServiceBusLifeTime>(TimeSpan.FromMinutes(1), logger, Watcher);
+            _timer.IsTelemetryActive = false;
             _timer.Start();
         }
 
