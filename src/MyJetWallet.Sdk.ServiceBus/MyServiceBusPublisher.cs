@@ -1,38 +1,49 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using MyServiceBus.TcpClient;
 
-namespace MyJetWallet.Sdk.ServiceBus
+namespace MyJetWallet.Sdk.ServiceBus;
+
+public class MyServiceBusPublisher<T> : IServiceBusPublisher<T>
 {
-    public class MyServiceBusPublisher<T> : IServiceBusPublisher<T>
+    private readonly MyServiceBusTcpClient _client;
+    private readonly string _topicName;
+    private readonly bool _immediatelyPersist;
+    private Action<Dictionary<string,string>> _headersHandler;
+
+    public MyServiceBusPublisher(MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
     {
-        private readonly MyServiceBusTcpClient _client;
-        private readonly string _topicName;
-        private readonly bool _immediatelyPersist;
+        _client = client;
+        _topicName = topicName;
+        _immediatelyPersist = immediatelyPersist;
+        _client.CreateTopicIfNotExists(topicName);
+    }
 
-        public MyServiceBusPublisher(MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
-        {
-            this._client = client;
-            _topicName = topicName;
-            _immediatelyPersist = immediatelyPersist;
-            this._client.CreateTopicIfNotExists(topicName);
-        }
+    public void SetHeadersHandler(Action<Dictionary<string, string>> handler)
+    {
+        _headersHandler = handler;
+    }
 
-        public async ValueTask PublishAsync11(T valueToPublish)
+    public Task PublishAsync(T message, Dictionary<string, string> headers = null)
+    {
+        if(_headersHandler is not null)
         {
-            await this._client.PublishAsync(_topicName, valueToPublish.ServiceBusContractToByteArray(), _immediatelyPersist);
+            headers ??= [];
+            _headersHandler.Invoke(headers);
         }
+        return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(headers), _immediatelyPersist);
+    }
 
-        public Task PublishAsync(T message)
+    public Task PublishAsync(IEnumerable<T> messageList, Dictionary<string, string> headers = null)
+    {
+        if (_headersHandler is not null)
         {
-            return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(), _immediatelyPersist);
+            headers ??= [];
+            _headersHandler.Invoke(headers);
         }
-
-        public Task PublishAsync(IEnumerable<T> messageList)
-        {
-            var batch = messageList.Select(e => e.ServiceBusContractToByteArray()).ToList();
-            return _client.PublishAsync(_topicName, batch, _immediatelyPersist);
-        }
+        var batch = messageList.Select(e => e.ServiceBusContractToByteArray(headers)).ToList();
+        return _client.PublishAsync(_topicName, batch, _immediatelyPersist);
     }
 }
