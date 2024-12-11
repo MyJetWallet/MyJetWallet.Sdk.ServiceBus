@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
 
@@ -6,15 +7,33 @@ namespace MyJetWallet.Sdk.ServiceBus
 {
     public static class DomainToContractMapper
     {
-        public static byte[] ServiceBusContractToByteArray(this object src)
+        public static byte[] ServiceBusContractToByteArray(this object src, Dictionary<string, string> headers = null)
         {
             try
             {
-                var stream = new MemoryStream();
+                using var stream = new MemoryStream();
 
-                stream.WriteByte(0); // First byte is a version contract;
+                if (headers is null)
+                {
+                    stream.WriteByte(0); // First byte is a version contract;
+                }
+                else
+                {
+                    stream.WriteByte(1);
 
-                ProtoBuf.Serializer.Serialize(stream, src);
+                    using var headerStream = new MemoryStream();
+                    Serializer.Serialize(headerStream, headers);
+                    if(headerStream.Length > ushort.MaxValue)
+                    {
+                        throw new Exception("Headers are too large to serialize");
+                    }
+                    byte[] sizeBytes = BitConverter.GetBytes((ushort)headerStream.Length);
+                    stream.Write(sizeBytes, 0, sizeBytes.Length);
+
+                    headerStream.WriteTo(stream);
+                }
+
+                Serializer.Serialize(stream, src);
 
                 var result = stream.ToArray();
 
