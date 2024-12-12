@@ -39,4 +39,22 @@ public class HeadersTests
         Assert.That(res.Data.Prop1, Is.EqualTo(obj.Prop1));
         CollectionAssert.IsEmpty(res.Headers);
     }
+
+    [Test]
+    public void TestShortSerialise()
+    {
+        var length = 3;
+        var res = BitConverter.GetBytes((ushort)length);
+        
+        Assert.That(res.Length, Is.EqualTo(2));
+        
+        length = 0;
+        res = BitConverter.GetBytes((ushort)length);
+        Assert.That(res.Length, Is.EqualTo(2));
+        
+        length = 300;
+        res = BitConverter.GetBytes((ushort)length);
+        Assert.That(res.Length, Is.EqualTo(2));
+        
+    }
 }

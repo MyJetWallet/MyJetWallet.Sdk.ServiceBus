@@ -9,7 +9,7 @@ Console.ReadLine();
 var sbClient = new MyServiceBusTcpClient(() => "myservicebus.tech.svc.cluster.local:6421", "AlexTest");
 
 var pub = new MyServiceBusPublisher<TestMessage>(sbClient, TestMessage.TopicName, false);
-pub.SetHeadersHandler(headers => headers.Add("commonKey", "commonValue"));
+pub.SetHeadersHandler((msg, headers) => headers.Add("commonKey", "commonValue"));
 
 var sub = new MyServiceBusSubscriber<TestMessage>(sbClient, TestMessage.TopicName, "test-query",
     TopicQueueType.PermanentWithSingleConnection, true, 2);

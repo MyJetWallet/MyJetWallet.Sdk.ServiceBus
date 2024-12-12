@@ -46,8 +46,27 @@ public static class MyServiceBusTcpClientFactory
         this ContainerBuilder builder,
         MyServiceBusTcpClient client,
         string topicName, 
+        bool immediatelyPersist)
+    {
+        client.CreateTopicIfNotExists(topicName);
+
+        var pub = new MyServiceBusPublisher<T>(client, topicName, immediatelyPersist);
+
+        // publisher
+        builder
+            .RegisterInstance(pub)
+            .As<IServiceBusPublisher<T>>()
+            .SingleInstance();
+
+        return builder;
+    }
+    
+    public static ContainerBuilder RegisterMyServiceBusPublisher<T>(
+        this ContainerBuilder builder,
+        MyServiceBusTcpClient client,
+        string topicName, 
         bool immediatelyPersist,
-        Action<Dictionary<string,string>> headersHandler = null)
+        Action<T, Dictionary<string,string>> headersHandler)
     {
         client.CreateTopicIfNotExists(topicName);
 

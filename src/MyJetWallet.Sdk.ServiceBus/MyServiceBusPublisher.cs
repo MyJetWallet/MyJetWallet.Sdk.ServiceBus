@@ -11,7 +11,7 @@ public class MyServiceBusPublisher<T> : IServiceBusPublisher<T>
     private readonly MyServiceBusTcpClient _client;
     private readonly string _topicName;
     private readonly bool _immediatelyPersist;
-    private Action<Dictionary<string,string>> _headersHandler;
+    private Action<T, Dictionary<string, string>> _headerGetter;
 
     public MyServiceBusPublisher(MyServiceBusTcpClient client, string topicName, bool immediatelyPersist)
     {
@@ -21,29 +21,79 @@ public class MyServiceBusPublisher<T> : IServiceBusPublisher<T>
         _client.CreateTopicIfNotExists(topicName);
     }
 
-    public void SetHeadersHandler(Action<Dictionary<string, string>> handler)
+    public void SetHeadersHandler(Action<T, Dictionary<string, string>> headerGetter)
     {
-        _headersHandler = handler;
+        _headerGetter = headerGetter ?? throw new Exception("headerGetter cannot be null");
+    }
+    
+    public Task PublishAsync(T message)
+    {
+        if(_headerGetter is not null)
+        {
+            var headers = new Dictionary<string, string>();
+            _headerGetter.Invoke(message, headers);
+            return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(headers), _immediatelyPersist);
+        }
+        
+        return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(), _immediatelyPersist);
+    }
+    
+    public Task PublishAsync(IEnumerable<T> messageList)
+    {
+        if (messageList == null)
+            return Task.CompletedTask;
+        
+        List<byte[]> batch = new List<byte[]>();
+
+        foreach (var message in messageList)
+        {
+            byte[] payload;
+            if (_headerGetter != null)
+            {
+                var headerList = new Dictionary<string, string>();
+                _headerGetter?.Invoke(message, headerList);
+                payload = message.ServiceBusContractToByteArray(headerList);
+            }
+            else
+            {
+                payload = message.ServiceBusContractToByteArray();
+            }
+            
+            batch.Add(payload);
+        }
+        
+        return _client.PublishAsync(_topicName, batch, _immediatelyPersist);
     }
 
-    public Task PublishAsync(T message, Dictionary<string, string> headers = null)
+    public Task PublishAsync(T message, Dictionary<string, string> headers)
     {
-        if(_headersHandler is not null)
-        {
-            headers ??= [];
-            _headersHandler.Invoke(headers);
-        }
-        return _client.PublishAsync(_topicName, message.ServiceBusContractToByteArray(headers), _immediatelyPersist);
+        if (message == null)
+            return Task.CompletedTask;
+        
+        headers ??= new Dictionary<string, string>();
+        _headerGetter?.Invoke(message, headers);
+        var payload = message.ServiceBusContractToByteArray(headers);
+        
+        return _client.PublishAsync(_topicName, payload, _immediatelyPersist);
     }
 
-    public Task PublishAsync(IEnumerable<T> messageList, Dictionary<string, string> headers = null)
+    public Task PublishAsync(IEnumerable<T> messageList, Dictionary<string, string> headers)
     {
-        if (_headersHandler is not null)
+        if (messageList == null)
+            return Task.CompletedTask;
+
+        headers ??= new Dictionary<string, string>();
+        
+        List<byte[]> batch = new List<byte[]>();
+
+        foreach (var message in messageList)
         {
-            headers ??= [];
-            _headersHandler.Invoke(headers);
+            var headerList = new Dictionary<string, string>(headers);
+            _headerGetter?.Invoke(message, headerList);
+            var payload = message.ServiceBusContractToByteArray(headerList);
+            batch.Add(payload);
         }
-        var batch = messageList.Select(e => e.ServiceBusContractToByteArray(headers)).ToList();
+        
         return _client.PublishAsync(_topicName, batch, _immediatelyPersist);
     }
 }
