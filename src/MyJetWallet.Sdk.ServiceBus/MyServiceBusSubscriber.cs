@@ -13,10 +13,10 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
     private readonly int _chunkSize;
     private readonly bool _batchSubscribe;
     private Action<Exception> _deserializeExceptionHandler;
-    private Action<Dictionary<string, string>> _headersHandler;
+    private Action<T, Dictionary<string, string>> _headersGetter;
     private readonly bool _withDeduplication = false;
-    private readonly List<Func<T, ValueTask>> _list = new();
-    private readonly List<Func<IReadOnlyList<T>, ValueTask>> _listBatch = new();
+    private readonly List<Func<T, ValueTask>> _list = [];
+    private readonly List<Func<IReadOnlyList<T>, ValueTask>> _listBatch = [];
     private readonly IDeduplicator<T> _deduplicator;
 
     public MyServiceBusSubscriber(
@@ -59,9 +59,9 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
         _deserializeExceptionHandler = deserializeExceptionHandler;
     }
 
-    public void SetHeadersHandler(Action<Dictionary<string, string>> headersHandler)
+    public void SetHeadersGetter(Action<T, Dictionary<string, string>> headersGetter)
     {
-        _headersHandler = headersHandler;
+        _headersGetter = headersGetter ?? throw new Exception("headersGetter cannot be null"); ;
     }
 
     private async ValueTask HandlerSingle(IMyServiceBusMessage data)
@@ -71,7 +71,7 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
         {
             var message = data.Data.ByteArrayToServiceBusContract<T>();
             item = message.Data;
-            _headersHandler?.Invoke(message.Headers);
+            _headersGetter?.Invoke(item, message.Headers);
         }
         catch (Exception ex)
         {
@@ -94,7 +94,7 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
         {
             var message = data.Data.ByteArrayToServiceBusContract<T>();
             item = message.Data;
-            _headersHandler?.Invoke(message.Headers);
+            _headersGetter?.Invoke(item, message.Headers);
         }
         catch (Exception ex)
         {
@@ -173,7 +173,7 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
             {
                 var message = mes.Data.ByteArrayToServiceBusContract<T>();
                 var item = message.Data;
-                _headersHandler?.Invoke(message.Headers);
+                _headersGetter?.Invoke(item, message.Headers);
                 items.Add(item);
             }
             catch (Exception ex)

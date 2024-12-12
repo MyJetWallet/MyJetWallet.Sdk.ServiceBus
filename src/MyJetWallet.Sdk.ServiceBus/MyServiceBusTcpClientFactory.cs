@@ -45,7 +45,7 @@ public static class MyServiceBusTcpClientFactory
     public static ContainerBuilder RegisterMyServiceBusPublisher<T>(
         this ContainerBuilder builder,
         MyServiceBusTcpClient client,
-        string topicName, 
+        string topicName,
         bool immediatelyPersist)
     {
         client.CreateTopicIfNotExists(topicName);
@@ -60,19 +60,19 @@ public static class MyServiceBusTcpClientFactory
 
         return builder;
     }
-    
+
     public static ContainerBuilder RegisterMyServiceBusPublisher<T>(
         this ContainerBuilder builder,
         MyServiceBusTcpClient client,
-        string topicName, 
+        string topicName,
         bool immediatelyPersist,
-        Action<T, Dictionary<string,string>> headersHandler)
+        Action<T, Dictionary<string, string>> headersHandler)
     {
         client.CreateTopicIfNotExists(topicName);
 
         var pub = new MyServiceBusPublisher<T>(client, topicName, immediatelyPersist);
         if (headersHandler is not null)
-            pub.SetHeadersHandler(headersHandler);
+            pub.SetHeadersSetter(headersHandler);
 
         // publisher
         builder
@@ -152,7 +152,7 @@ public static class MyServiceBusTcpClientFactory
         MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
         IDeduplicator<T> _deduplicator = null,
         Action<Exception> deserializeExceptionHandler = null,
-        Action<Dictionary<string, string>> headersHandler = null)
+        Action<T, Dictionary<string, string>> headersGetter = null)
     {
         MyServiceBusSubscriber<T> subscriber;
         if (_deduplicator is not null)
@@ -161,8 +161,8 @@ public static class MyServiceBusTcpClientFactory
             subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, false, 100);
         if (deserializeExceptionHandler is not null)
             subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
-        if (headersHandler is not null)
-            subscriber.SetHeadersHandler(headersHandler);
+        if (headersGetter is not null)
+            subscriber.SetHeadersGetter(headersGetter);
 
         // single subscriber
         builder
@@ -235,16 +235,16 @@ public static class MyServiceBusTcpClientFactory
 
     public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
         this ContainerBuilder builder,
-        MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType, 
+        MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
         int chunkSize = 100,
         Action<Exception> deserializeExceptionHandler = null,
-        Action<Dictionary<string, string>> headersHandler = null)
+        Action<T, Dictionary<string, string>> headersGetter = null)
     {
         var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, chunkSize);
         if (deserializeExceptionHandler is not null)
             subscriber.SetDeserializeExceptionHandler(deserializeExceptionHandler);
-        if (headersHandler is not null)
-            subscriber.SetHeadersHandler(headersHandler);
+        if (headersGetter is not null)
+            subscriber.SetHeadersGetter(headersGetter);
 
         // batch subscriber
         builder
@@ -259,7 +259,7 @@ public static class MyServiceBusTcpClientFactory
         this ContainerBuilder builder,
         Func<T, string> tToStrFunc,
         Func<string> noSqlWriterUrl,
-        string tableName,             
+        string tableName,
         string topicName,
         TimeSpan expirationTime,
         ILoggerFactory loggerFactory)
