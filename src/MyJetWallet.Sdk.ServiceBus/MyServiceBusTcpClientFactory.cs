@@ -150,9 +150,9 @@ public static class MyServiceBusTcpClientFactory
     public static ContainerBuilder RegisterMyServiceBusSubscriberSingle<T>(
         this ContainerBuilder builder,
         MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
+        Action<T, Dictionary<string, string>> headersGetter,
         IDeduplicator<T> _deduplicator = null,
-        Action<Exception> deserializeExceptionHandler = null,
-        Action<T, Dictionary<string, string>> headersGetter = null)
+        Action<Exception> deserializeExceptionHandler = null)
     {
         MyServiceBusSubscriber<T> subscriber;
         if (_deduplicator is not null)
@@ -236,9 +236,9 @@ public static class MyServiceBusTcpClientFactory
     public static ContainerBuilder RegisterMyServiceBusSubscriberBatch<T>(
         this ContainerBuilder builder,
         MyServiceBusTcpClient client, string topicName, string queueName, TopicQueueType queryType,
+        Action<T, Dictionary<string, string>> headersGetter,
         int chunkSize = 100,
-        Action<Exception> deserializeExceptionHandler = null,
-        Action<T, Dictionary<string, string>> headersGetter = null)
+        Action<Exception> deserializeExceptionHandler = null)
     {
         var subscriber = new MyServiceBusSubscriber<T>(client, topicName, queueName, queryType, true, chunkSize);
         if (deserializeExceptionHandler is not null)

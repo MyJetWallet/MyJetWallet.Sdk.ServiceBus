@@ -1,4 +1,5 @@
 using System.Runtime.Serialization;
+using NUnit.Framework.Legacy;
 
 namespace MyJetWallet.Sdk.ServiceBus.Tests;
 
@@ -26,7 +27,7 @@ public class HeadersTests
         var res = bytes.ByteArrayToServiceBusContract<TestObj>();
 
         Assert.That(res.Data.Prop1, Is.EqualTo(obj.Prop1));
-        CollectionAssert.AreEqual(headers, res.Headers);
+        Assert.That(res.Headers, Is.EqualTo(headers).AsCollection);
     }
 
     [Test]
@@ -37,7 +38,7 @@ public class HeadersTests
         var res = bytes.ByteArrayToServiceBusContract<TestObj>();
 
         Assert.That(res.Data.Prop1, Is.EqualTo(obj.Prop1));
-        CollectionAssert.IsEmpty(res.Headers);
+        Assert.That(res.Headers, Is.Empty);
     }
 
     [Test]
