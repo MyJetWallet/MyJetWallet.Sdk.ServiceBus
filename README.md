@@ -26,6 +26,18 @@ public class ServiceBusModule : Module
 }
 ```
 
+**DeserializeExceptionHandler**
+
+In case it you want to skip message with deserialize exception then you can use global handler to log and skip message.
+But be careful to use it, in this case you can miss important messages from topic in case if happe breking change in the message model and you  forgot to update client service.
+
+```csharp
+// call in sope plase static method to activete globally DeserializeExceptionHandler
+
+MyServiceBusGlobalEventHandler.SetLogAndSkipDeserializeExceptionHandler(Program.LogFactory);
+```
+
+
 **LifeTime:**
 
 ```csharp

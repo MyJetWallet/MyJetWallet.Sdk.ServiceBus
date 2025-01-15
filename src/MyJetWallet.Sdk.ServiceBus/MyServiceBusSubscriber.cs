@@ -11,6 +11,8 @@ namespace MyJetWallet.Sdk.ServiceBus;
 public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyList<T>>
 {
     private readonly int _chunkSize;
+    private readonly string _topicName;
+    private readonly string _queueName;
     private readonly bool _batchSubscribe;
     private Action<Exception> _deserializeExceptionHandler;
     private Action<T, Dictionary<string, string>> _headersGetter;
@@ -24,6 +26,8 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
         string topicName, string queueName, TopicQueueType queryType, bool batchSubscribe,
         bool withDeduplication)
     {
+        _topicName = topicName;
+        _queueName = queueName;
         _batchSubscribe = batchSubscribe;
         _withDeduplication = withDeduplication;
 
@@ -78,6 +82,12 @@ public class MyServiceBusSubscriber<T> : ISubscriber<T>, ISubscriber<IReadOnlyLi
             if (_deserializeExceptionHandler != null)
             {
                 _deserializeExceptionHandler.Invoke(ex);
+                return;
+            }
+
+            Type type = typeof(T);
+            if (MyServiceBusGlobalEventHandler.HandleDeserializeException(data, ex, type, _topicName, _queueName))
+            {
                 return;
             }
             throw;
