@@ -12,7 +12,7 @@
     <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.8.0" />
     <PackageReference Include="MyServiceBus.TcpClient" Version="2.4.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="protobuf-net" Version="3.2.46" />
+    <PackageReference Include="protobuf-net" Version="3.2.52" />
     <PackageReference Include="AsyncAwaitUtils" Version="1.0.3" />
   </ItemGroup>
 
