@@ -8,8 +8,8 @@
   <ItemGroup>
     <PackageReference Include="Autofac" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
-    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.6.0" />
-    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.9.1" />
+    <PackageReference Include="MyJetWallet.Sdk.NoSql" Version="2.7.0" />
+    <PackageReference Include="MyJetWallet.Sdk.Service" Version="2.10.0" />
     <PackageReference Include="MyServiceBus.TcpClient" Version="2.4.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="protobuf-net" Version="3.2.56" />
